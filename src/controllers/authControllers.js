@@ -1,6 +1,7 @@
 import joi from "joi";
 import db from "../database/db.js";
 import bcrypt from 'bcrypt'
+import { v4 as uuid } from 'uuid';
 
 const registerSchamer = joi.object({
     name: joi.string().required(),
@@ -45,4 +46,26 @@ export async function Register (req, res) {
     
     
 
+}
+
+export async function SignIn(req,res){
+    let {email,password} = res.locals.user;
+    let find = await db.collection("users").findOne({email:email});
+
+    if(bcrypt.compareSync(password,find.password)){
+        const token = uuid();
+        await db.collection("sessions").insertOne({
+            userId: find._id,
+            token
+        })
+        let user = {
+            name: find.name,
+            token
+        }
+
+        res.status(200).send(user);
+    }
+    else{
+        res.status(401).send("Senha incorreta");
+    }
 }
