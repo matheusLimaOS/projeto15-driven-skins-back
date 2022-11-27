@@ -7,6 +7,20 @@ const signInSchema = joi.object({
     password: joi.string().required(),
 })
 
+export async function verifyToken(req,res,next){
+    let {token} = req.headers;
+
+    let find = await db.collection("sessions").findOne({token:token});
+
+    if(find){
+        res.locals.userID = find.userId;
+        next();
+    }
+    else{
+        res.status(401).send("Sessão não encontrada");
+    }
+}
+
 export async function verifySignIn(req,res,next){
     let {email,password} = req.body;
     let user = {
@@ -36,3 +50,4 @@ export async function verifySignIn(req,res,next){
         }
     }
 }
+
